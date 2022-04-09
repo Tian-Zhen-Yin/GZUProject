@@ -1,15 +1,15 @@
 package fhe;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
-import jpaillier.KeyPair;
-import rsa.RSAUtil;
+import rsa.RSAKeyGenerator;
+import rsa.RSAPrivateKey;
+import rsa.RSAPublicKey;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Map;
+import java.math.MathContext;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.HashMap;
 
 /**
  * @Classname FHEPrivateKey
@@ -18,6 +18,8 @@ import java.util.Map;
  * @Created by 17402
  */
 public class FHEKey {
+    byte PUBLIC_KEY = 1;
+    byte PRIVATE_KEY = 2;
     private int precision = 32;
     private  BigDecimal g;
     private int a;
@@ -27,20 +29,22 @@ public class FHEKey {
 
     private  int highK;
 
-    private Map<String, Object> keyMap;
+    private HashMap<String, String> keyMap;
 
     private int hashcode = 0;
-    private RSAPrivateKey rsaPrivateKey;
-    private RSAUtil rsaUtil;
-    private RSAPublicKey rsaPublicKey;
-
+    private PrivateKey rsaPrivateKey;
+    private PublicKey rsaPublicKey;
+    private RSAKeyGenerator rsaKeyGenerator;
+    private RSAPrivateKey rsaPrivateKey2;
+    private RSAPublicKey rsaPublicKey2;
+    private MathContext mathContext = new MathContext(precision);
     public interface Serializer {
 
         void serialize(int a,int p, int lowK, int highK,
-                       BigDecimal g, int precision, RSAUtil rsaUtil, int hashcode) throws Exception;
+                       BigDecimal g, int precision,   int hashcode) throws Exception;
 
-        void serializeByRawData(int a,int p,int lowK, int highK,  BigDecimal g, int precision,
-                                RSAUtil  rsaUtil, int hashcode) throws Exception;
+        void serializeByRawData(int a,int p,int lowK, int highK,  BigDecimal g, int precision
+                                  , int hashcode) throws Exception;
     }
     public FHEKey(double g, int a, int lowK, int p, int keysize) throws Exception {
         try {
@@ -50,10 +54,12 @@ public class FHEKey {
             this.p=p;
             this.lowK = lowK;
             this.highK = (p + 1) * lowK / p;
-            this.rsaUtil=new RSAUtil();
-            this.keyMap=RSAUtil.initKey(keysize);
-            this.rsaPrivateKey=(RSAPrivateKey) keyMap.get("RSAPrivateKey");
-            this.rsaPublicKey=(RSAPublicKey) keyMap.get("RSAPublicKey");
+       /*     this.keyMap=RSAUtil.getKeyPairMap(keysize);
+            this.rsaPrivateKey= rsaUtil.getPrivateKey(keyMap.get("privateKey"));
+            this.rsaPublicKey= rsaUtil.getPublicKey(keyMap.get("publicKey")) ;*/
+            this.rsaKeyGenerator=new RSAKeyGenerator();
+            this.rsaPrivateKey2= (RSAPrivateKey) rsaKeyGenerator.makeKey(PRIVATE_KEY);
+            this.rsaPublicKey2=(RSAPublicKey) rsaKeyGenerator.makeKey(PUBLIC_KEY);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,15 +69,20 @@ public class FHEKey {
 
         try {
 
-            int k = ByteBuffer.wrap(rsaUtil.decryptByPrivateKey(String.valueOf(value.getLV()),rsaPrivateKey.getEncoded())).getInt();
+            int k = rsaPrivateKey2.decrypt(value.getLV()).intValue() ;
 
             BigDecimal rv = value.getRV();
 
             if (k == 0) {
 
             }
-            BigDecimal lv=ga.pow(k).setScale(precision, BigDecimal.ROUND_HALF_EVEN);
-            return rv.divide(lv, precision, BigDecimal.ROUND_HALF_EVEN);
+            //BigDecimal rv=ga.pow(0.1/a).setScale(precision, BigDecimal.ROUND_HALF_EVEN);
+            BigDecimal rv1=rv.divide(BigDecimal.valueOf(k),BigDecimal.ROUND_HALF_EVEN);
+            double ta=  (a*1.0);
+            double y=1/ta;
+            BigDecimal rv2=BigDecimalMath.pow(rv1, new BigDecimal(y),mathContext);
+            BigDecimal frv=BigDecimalMath.log2(rv2,mathContext).divide(BigDecimalMath.log2(g,mathContext),BigDecimal.ROUND_HALF_EVEN);
+            return frv;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,21 +100,21 @@ public class FHEKey {
     int getHighK() {
         return highK;
     }
-    RSAUtil getRsaUtil(){
-        return rsaUtil;
-    }
-    RSAPublicKey getRsaPublicKey(){
+    PublicKey getRsaPublicKey(){
         return rsaPublicKey;
     }
-    RSAPrivateKey getRsaPrivateKey(){
+    PrivateKey getRsaPrivateKey(){
         return rsaPrivateKey;
     }
+    RSAKeyGenerator getRsaKeyGenerator(){return rsaKeyGenerator;}
+    RSAPrivateKey getRsaPrivateKey2(){return rsaPrivateKey2;}
+    RSAPublicKey getRsaPublicKey2(){return rsaPublicKey2;}
 
     public void serialize(Serializer serializer, boolean useRawData) throws Exception {
         if (useRawData) {
-            serializer.serializeByRawData(a, p, lowK, highK,g, precision, rsaUtil, hashCode());
+            serializer.serializeByRawData(a, p, lowK, highK,g, precision,  hashCode());
         } else {
-            serializer.serialize(a, p, lowK, highK, g, precision, rsaUtil, hashCode());
+            serializer.serialize(a, p, lowK, highK, g, precision, hashCode());
         }
     }
 
@@ -123,7 +134,8 @@ public class FHEKey {
         sb.append(highK);
         sb.append(keyMap);
         sb.append(rsaPrivateKey);
-        sb.append(rsaUtil);
+        sb.append(rsaPrivateKey2);
+        sb.append(rsaPublicKey2);
 
         char[] charArr = sb.toString().toCharArray();
         for(char c : charArr) {

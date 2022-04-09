@@ -1,7 +1,5 @@
 package fhe;
 
-import rsa.RSAUtil;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -13,7 +11,7 @@ import java.math.MathContext;
  * @Created by 17402
  */
 public class FHEEncryptedNumber implements Comparable{
-    private static  int precision = 8;
+    private static  int precision = 32;
     private BigInteger lv;
     private BigDecimal rv;
     protected FHEContext context;
@@ -45,7 +43,7 @@ public class FHEEncryptedNumber implements Comparable{
     public BigDecimal getRV() {
         return rv;
     }
-   /* public FHEEncryptedNumber add(FHEEncryptedNumber other) {
+  /*  public FHEEncryptedNumber add(FHEEncryptedNumber other) {
         return context.add(this, other);
     }
 
@@ -83,10 +81,28 @@ public class FHEEncryptedNumber implements Comparable{
 
         return (int) Math.round(realValue);
     }
+    public FHEEncryptedNumber add(FHEEncryptedNumber other) throws Exception {
+        return context.add(this, other);
+    }
+
+    public FHEEncryptedNumber add(double other) throws Exception {
+        return context.add(this, context.encrypt(other));
+    }
+
+    public FHEEncryptedNumber add(int other) throws Exception {
+        return context.add(this, context.encrypt(other));
+    }
 
 
     @Override
     public int compareTo(Object o) {
+        if (o instanceof FHEEncryptedNumber) {
+
+            FHEEncryptedNumber other = (FHEEncryptedNumber)o;
+
+            return this.rv.compareTo(other.rv);
+        }
+
         return 0;
     }
 }

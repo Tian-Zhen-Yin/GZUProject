@@ -3,6 +3,7 @@ package rsa;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -34,6 +35,9 @@ public class RSAPrivateKey extends RSAKey
     public BigInteger decrypt(BigInteger c) {
         return c.modPow(getPriExp(), getModulus());
     }
+   /* public BigDecimal decryptAsDouble(BigDecimal c){
+        return c.modPow(getPriExp(),getModulus());
+    }*/
     
     /** Extracts the data portion of the byte array. */
     protected byte[] extractData(byte[] EB) {

@@ -14,12 +14,13 @@ public class FHEEncryptedNumber implements Comparable{
     private static  int precision = 32;
     private BigInteger lv;
     private BigDecimal rv;
-    protected FHEContext context;
+    private FHEContext context;
     private MathContext mathContext = new MathContext(precision);
 
     public FHEEncryptedNumber(){
         this.context=null;
     }
+
 
     public FHEEncryptedNumber(FHEContext context, BigInteger lv, BigDecimal rv){
         this.lv=lv;
@@ -43,6 +44,7 @@ public class FHEEncryptedNumber implements Comparable{
     public BigDecimal getRV() {
         return rv;
     }
+
   /*  public FHEEncryptedNumber add(FHEEncryptedNumber other) {
         return context.add(this, other);
     }
@@ -91,6 +93,10 @@ public class FHEEncryptedNumber implements Comparable{
 
     public FHEEncryptedNumber add(int other) throws Exception {
         return context.add(this, context.encrypt(other));
+    }
+
+    public FHEEncryptedNumber substract(FHEEncryptedNumber other) throws Exception {
+       return context.subtract(this,other);
     }
 
 

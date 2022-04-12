@@ -1,6 +1,8 @@
 package fhe;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
+import lombok.extern.slf4j.Slf4j;
+import util.BigIntegerUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,6 +15,7 @@ import java.util.Random;
  * @Date 2022/4/6 16:40
  * @Created by 17402
  */
+@Slf4j
 public class FHEContext {
     private static final int precision=32;
     private Random rand=new Random();
@@ -24,6 +27,9 @@ public class FHEContext {
     }
     public int getPrecision() {
         return precision;
+    }
+    FHEKey getFheKey(){
+        return fheKey;
     }
 
 
@@ -71,16 +77,16 @@ public class FHEContext {
         return new FHEEncryptedNumber(this,munLv,munRv);
 
     }
+    //减法存在问题，需要解决rsa处理浮点数的问题
     public FHEEncryptedNumber subtract(FHEEncryptedNumber op1, FHEEncryptedNumber op2) throws Exception {
         BigInteger lv;
         BigDecimal rv;
-        try {
-            op2 = new FHEEncryptedNumber(this, op2.getLV(), op2.getRV().negate());
-            return add(op1, op2);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        throw new Exception("加法失败");
+        log.info("op1.n =" + op1.getContext().getFheKey().getN());
+        log.info("op2.n =" + op2.getContext().getFheKey().getN());
+        BigInteger subLv=op1.getLV().multiply(BigIntegerUtil.modInverse(op2.getLV(),op2.getContext().getFheKey().getN()));
+        BigDecimal subRv=op1.getRV().divide(op2.getRV(),BigDecimal.ROUND_HALF_EVEN);
+        return new FHEEncryptedNumber(this,subLv,subRv);
+
     }
 
 

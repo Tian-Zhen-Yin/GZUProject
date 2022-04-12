@@ -1,5 +1,7 @@
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
+import rsa.*;
+import util.BigIntegerUtil;
 import util.HexUtil;
 import util.Util;
 
@@ -73,5 +75,42 @@ public class RSAtest {
         long ll = 100L;
         double dd = (double) ll;
         System.out.println(dd);
+    }
+
+    @Test
+    public void testBigIntDivide(){
+        BigInteger bi1 = new BigInteger("999");
+        BigInteger bi2 = new BigInteger("50");
+
+        //public BigInteger add(BigInteger val):加
+        System.out.println("add:"+bi1.add(bi2));
+
+        //public BigInteger subtract(BigInteger val):减
+        System.out.println("subtract:"+bi1.subtract(bi2));
+
+        //public BigInteger multiply(BigInteger val):乘
+        System.out.println("multiply:"+bi1.multiply(bi2));
+
+        //public BigInteger divide(BigInteger val):除
+        System.out.println("divide:"+bi1.divide(bi2));
+    }
+
+    @Test
+    public void testRSAdIVISION(){
+        RSAKeyGenerator keygen = new RSAKeyGenerator();
+        RSACompleteKey completeKey = (RSACompleteKey)keygen.makeKey(RSAKey.COMPLETE_KEY);
+        RSAPublicKey publicKey = (RSAPublicKey)keygen.makeKey(RSAKey.PUBLIC_KEY);
+        RSAPrivateKey privateKey = (RSAPrivateKey)keygen.makeKey(RSAKey.PRIVATE_KEY);
+        String m1="1321";
+        BigInteger enc1=publicKey.encrypt(new BigInteger(m1));
+        String m2="12";
+        BigInteger enc2=publicKey.encrypt(new BigInteger(m2));
+        BigInteger enc3=enc1.multiply(enc2);
+        System.out.println(m1+"*"+m2+"="+privateKey.decrypt(enc3));
+        BigInteger enc2In= BigIntegerUtil.modInverse(enc2,keygen.getModulus());
+        BigInteger enc4=enc1.multiply(enc2In);
+        BigInteger enc5=privateKey.decrypt(enc4);
+        //模逆运算的前提是能整除。若不能整除，则无法解密
+        System.out.println(m1+"/"+m2+"="+enc5);
     }
 }

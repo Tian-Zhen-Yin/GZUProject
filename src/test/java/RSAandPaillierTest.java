@@ -52,9 +52,7 @@ public class RSAandPaillierTest {
         log.warn("After encrypt:q="+enc2);
         log.warn("Before encrypt:");
         FHEEncryptedNumber sum = context.add(enc1, enc2);
-       // double dep=enc1.decryptAsDouble(fheKey);
-        //log.warn("After decrypt m + q = " + String.valueOf(dep));
-        log.warn("Before encrypt:");
+        log.warn("Before encrypt:p-q="+(p-q));
         FHEEncryptedNumber enc3=context.encrypt(p);
         FHEEncryptedNumber sub = context.subtract(enc3, enc2);
         int decSub=sub.decryptAsInt(fheKey);
@@ -219,8 +217,9 @@ public class RSAandPaillierTest {
         List<Float> bigFloatNums = getFloatList("src/main/resources/random_big_float_num_list.txt");
         long start;
         long end;
+        List<Float> bigFloatnNum=bigFloatNums.subList(0,100);
         start = System.currentTimeMillis();
-        List<FHEEncryptedNumber> encBigFloatNum1Lists = bigFloatNums.parallelStream().map(value -> {
+        List<FHEEncryptedNumber> encBigFloatNum1Lists = bigFloatnNum.parallelStream().map(value -> {
             try {
                 return context.encrypt(value);
             } catch (Exception e) {
@@ -229,7 +228,7 @@ public class RSAandPaillierTest {
             return null;
         }).collect(Collectors.toList());
         end =System.currentTimeMillis();
-        log.info("250 0000 big float numbers encrypt: elapse time is " + String.valueOf((end - start)));
+        log.info("100 big float numbers encrypt: elapse time is " + String.valueOf((end - start)));
 
 
 
@@ -244,7 +243,7 @@ public class RSAandPaillierTest {
             return null;
         }).collect(Collectors.toList());
         end=System.currentTimeMillis();
-        log.info("250 0000 big integer numbers decrypt: elapse time is " + String.valueOf((end - start)));
+        log.info("100 big float numbers decrypt: elapse time is " + String.valueOf((end - start)));
     }
 
 
@@ -255,7 +254,6 @@ public class RSAandPaillierTest {
         FHEContext context = new FHEContext(fheKey);
         List<Integer> smallNums = getIntegerList("src/main/resources/random_small_int_num_list.txt");
         long start,end;
-
 
         //250万的小整数和250万的大整数混合加减混合运算
         //250万次加法运算

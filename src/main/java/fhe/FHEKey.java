@@ -1,11 +1,13 @@
 package fhe;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
+import rsa.RSAKey;
 import rsa.RSAKeyGenerator;
 import rsa.RSAPrivateKey;
 import rsa.RSAPublicKey;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -28,6 +30,7 @@ public class FHEKey {
     private  int lowK;
 
     private  int highK;
+    private BigInteger n;
 
     private HashMap<String, String> keyMap;
 
@@ -58,6 +61,7 @@ public class FHEKey {
             this.rsaPrivateKey= rsaUtil.getPrivateKey(keyMap.get("privateKey"));
             this.rsaPublicKey= rsaUtil.getPublicKey(keyMap.get("publicKey")) ;*/
             this.rsaKeyGenerator=new RSAKeyGenerator();
+            this.n=rsaKeyGenerator.getModulus();
             this.rsaPrivateKey2= (RSAPrivateKey) rsaKeyGenerator.makeKey(PRIVATE_KEY);
             this.rsaPublicKey2=(RSAPublicKey) rsaKeyGenerator.makeKey(PUBLIC_KEY);
 
@@ -69,20 +73,20 @@ public class FHEKey {
 
         try {
 
-            int k = rsaPrivateKey2.decrypt(value.getLV()).intValue() ;
 
-            BigDecimal rv = value.getRV();
+                int k = rsaPrivateKey2.decrypt(value.getLV()).intValue() ;
 
-            if (k == 0) {
+                BigDecimal rv = value.getRV();
 
-            }
-            //BigDecimal rv=ga.pow(0.1/a).setScale(precision, BigDecimal.ROUND_HALF_EVEN);
-            BigDecimal rv1=rv.divide(BigDecimal.valueOf(k),BigDecimal.ROUND_HALF_EVEN);
-            double ta=  (a*1.0);
-            double y=1/ta;
-            BigDecimal rv2=BigDecimalMath.pow(rv1, new BigDecimal(y),mathContext);
-            BigDecimal frv=BigDecimalMath.log2(rv2,mathContext).divide(BigDecimalMath.log2(g,mathContext),BigDecimal.ROUND_HALF_EVEN);
-            return frv;
+                //BigDecimal rv=ga.pow(0.1/a).setScale(precision, BigDecimal.ROUND_HALF_EVEN);
+                BigDecimal rv1=rv.divide(BigDecimal.valueOf(k),BigDecimal.ROUND_HALF_EVEN);
+                double ta=  (a*1.0);
+                double y=1/ta;
+                BigDecimal rv2=BigDecimalMath.pow(rv1, new BigDecimal(y),mathContext);
+                BigDecimal frv=BigDecimalMath.log2(rv2,mathContext).divide(BigDecimalMath.log2(g,mathContext),BigDecimal.ROUND_HALF_EVEN);
+                return frv;
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -105,6 +109,9 @@ public class FHEKey {
     }
     PrivateKey getRsaPrivateKey(){
         return rsaPrivateKey;
+    }
+    BigInteger getN(){
+        return n;
     }
     RSAKeyGenerator getRsaKeyGenerator(){return rsaKeyGenerator;}
     RSAPrivateKey getRsaPrivateKey2(){return rsaPrivateKey2;}
